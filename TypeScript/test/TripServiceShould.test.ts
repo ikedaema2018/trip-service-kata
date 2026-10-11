@@ -5,61 +5,74 @@ import UserNotLoggedInException from "../src/exception/UserNotLoggedInException"
 import Trip from "../src/trip/Trip";
 
 describe("TripServiceShould", () => {
-    it("getTripsByUser not logged in", () => {
-        class TripServiceTest extends TripService {
-            protected getLoggedUser() {
-                return null as unknown as User;
-            }
-            protected override findTripsByUser(user: User) {
-                return user.getTrips();
+    it("if not logged in, UserNotLoggedInException is thrown", () => {
+        class TripDAOTest {
+            public findTripsByUser(user: User) {
+                return [];
             }
         }
-
-        const tripService: TripService = new TripServiceTest();
+        class UserSession {
+            public getLoggedUser() {
+                return null;
+            }
+        }
+        const tripService: TripService = new TripService(
+            new TripDAOTest(),
+            new UserSession(),
+        );
         const user: User = new User();
         
         expect(() => tripService.getTripsByUser(user)).toThrow(UserNotLoggedInException);
     });
 
-    it ("getTripsByUser logged in and not friend", () => {
-        const trip = new Trip();
-        const user1 = new User();
+    it ("if passed user is not a friend of loggedIn, can not get trips", () => {
+        const loggedInUser = new User();
         const anotherUser = new User();
-        const user2 = new User();
-        user2.addFriend(anotherUser);   
-        user2.addTrip(trip);
-        class TripServiceTest extends TripService {
-            protected override getLoggedUser() {
-                return user1;
+        const notFriend = new User();
+        const trip = new Trip();
+        notFriend.addFriend(anotherUser);
+
+        class TripDAOTest {
+            public findTripsByUser(user: User) {
+                return [trip];
             }
-            protected override findTripsByUser(user: User) {
-                return user.getTrips();
+        }
+        class UserSession {
+            public getLoggedUser() {
+                return loggedInUser;
             }
         }
         
-        const tripService: TripService = new TripServiceTest();
-
-        expect(tripService.getTripsByUser(user2)).toEqual([]);
+        const tripService: TripService = new TripService(
+            new TripDAOTest(),
+            new UserSession(),
+        );
+        expect(tripService.getTripsByUser(notFriend)).toEqual([]);
     });
 
-    it ("getTripsByUser logged in and is friend", () => {
+    it ("if loggedIn and passed user is a friend, can get trips", () => {
         const trip = new Trip();
-        const user1 = new User();
-        const user2 = new User();
-        user2.addFriend(user1);
-        user2.addTrip(trip);
-        class TripServiceTest extends TripService {
-            protected override getLoggedUser() {
-                console.log("getLoggedUser called");
-                return user1;
+        const loggedInUser = new User();
+        const friend = new User();
+        friend.addFriend(loggedInUser);
+        
+        class TripDAOTest {
+            public findTripsByUser(user: User) {
+                return [trip];
             }
-            
-            protected override findTripsByUser(user: User) {
-                return user.getTrips();
+        }
+        class UserSession {
+            public getLoggedUser() {
+                return loggedInUser;
             }
         }
         
-        const tripService: TripService = new TripServiceTest();
-        expect(tripService.getTripsByUser(user2)).toEqual([trip]);
+        const tripService: TripService = new TripService(
+            new TripDAOTest(),
+            new UserSession(),
+        );
+        const trips = tripService.getTripsByUser(friend);
+        expect(trips[0]).toBe(trip);
+        expect(trips.length).toBe(1);
     });
 });
