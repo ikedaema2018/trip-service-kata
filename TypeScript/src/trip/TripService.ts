@@ -1,24 +1,15 @@
-import UserNotLoggedInException from "../exception/UserNotLoggedInException";
-import { LoggedUserProvider } from "../user/LoggedUserProvider";
 import User from "../user/User";
+import { ITripRepository } from "./ITripRepository";
 import Trip from "./Trip";
-import { TripRepository } from "./TripRepository";
 
 export default class TripService {
-    private tripRepository: TripRepository;
-    private loggedUserProvider: LoggedUserProvider;
+    private tripRepository: ITripRepository;
 
-    constructor(tripRepository: TripRepository, loggedUserProvider: LoggedUserProvider) {
+    constructor(tripRepository: ITripRepository) {
         this.tripRepository = tripRepository;
-        this.loggedUserProvider = loggedUserProvider;
     }
 
-    public getTripsByUser(user: User): Trip[] {
-        const loggedUser = this.loggedUserProvider.getLoggedUser();
-        if (!loggedUser) {
-            throw new UserNotLoggedInException();
-        }
-
+    public getTripsByUser(user: User, loggedUser: User): Trip[] {
         if (!user.isFriendsWith(loggedUser)) {
             return [];
         }

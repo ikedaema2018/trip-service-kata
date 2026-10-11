@@ -1,5 +1,5 @@
 import User from "./User";
 
-export interface LoggedUserProvider {
+export interface ILoggedUserProvider {
     getLoggedUser(): User | null;
 }

@@ -1,30 +1,9 @@
 import "jest";
 import User from "../src/user/User";
 import TripService from "../src/trip/TripService";
-import UserNotLoggedInException from "../src/exception/UserNotLoggedInException";
 import Trip from "../src/trip/Trip";
 
 describe("TripServiceShould", () => {
-    it("if not logged in, UserNotLoggedInException is thrown", () => {
-        class TripDAOTest {
-            public findTripsByUser(user: User) {
-                return [];
-            }
-        }
-        class UserSession {
-            public getLoggedUser() {
-                return null;
-            }
-        }
-        const tripService: TripService = new TripService(
-            new TripDAOTest(),
-            new UserSession(),
-        );
-        const user: User = new User();
-        
-        expect(() => tripService.getTripsByUser(user)).toThrow(UserNotLoggedInException);
-    });
-
     it ("if passed user is not a friend of loggedIn, can not get trips", () => {
         const loggedInUser = new User();
         const anotherUser = new User();
@@ -37,17 +16,11 @@ describe("TripServiceShould", () => {
                 return [trip];
             }
         }
-        class UserSession {
-            public getLoggedUser() {
-                return loggedInUser;
-            }
-        }
         
         const tripService: TripService = new TripService(
             new TripDAOTest(),
-            new UserSession(),
         );
-        expect(tripService.getTripsByUser(notFriend)).toEqual([]);
+        expect(tripService.getTripsByUser(notFriend, loggedInUser)).toEqual([]);
     });
 
     it ("if loggedIn and passed user is a friend, can get trips", () => {
@@ -61,17 +34,11 @@ describe("TripServiceShould", () => {
                 return [trip];
             }
         }
-        class UserSession {
-            public getLoggedUser() {
-                return loggedInUser;
-            }
-        }
         
         const tripService: TripService = new TripService(
             new TripDAOTest(),
-            new UserSession(),
         );
-        const trips = tripService.getTripsByUser(friend);
+        const trips = tripService.getTripsByUser(friend, loggedInUser);
         expect(trips[0]).toBe(trip);
         expect(trips.length).toBe(1);
     });
